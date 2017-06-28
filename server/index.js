@@ -43,7 +43,7 @@ app.route('/api/chirps')
 
     }).post(function (req, res) {
         var newChirp = req.body;
-        row('InsertChirp', [newChirp.message, newChirp.user])
+        row('InsertChirp', [newChirp.message, newChirp.userid])
             .then(function (id) {
                 res.status(201).send(id);
             }).catch(function (err) {
@@ -53,9 +53,9 @@ app.route('/api/chirps')
     });
 app.route('/api/chirps/:id')
     .get(function (req, res) {
-        row('GetChirp', [req.params.id])
+        row('GetChirp', [req.params.id])  // stored procedure in DB
             .then(function (chirp) {
-                res.send(chirps);
+                res.send(chirp);
             }).catch(function (err) {
                 console.log(err);
                 res.sendStatus(500);
@@ -78,6 +78,14 @@ app.route('/api/chirps/:id')
                 res.sendStatus(500);
             });
     
+    });
+    app.get('/api/users', function(req, res) {
+        rows('GetUsers')
+        .then(function(users) {
+            res.send(users);
+        }).catch(function(err) {
+        res.sendStatus(500);
+         });
     });
 
 app.listen(3000);
@@ -144,6 +152,7 @@ function callProcedure(procedureName, args) {
                 }
                 var callString = 'CALL ' + procedureName + '(' + placeholders + ');';
                 connection.query(callString, args, function (err, resultsets) {
+                    connection.release();
                     if (err) {
                         reject(err);
                     } else {
